@@ -9,8 +9,8 @@
 #include <stdio.h>
 
 /*** defines ***/
-#define CTRL_KEY(k) ((k) & 0x1f)
 #define KILO_VERSION "0.0.1"
+#define CTRL_KEY(k) ((k) & 0x1f)
 
 enum editorKey {
   ARROW_LEFT = 1000,
@@ -19,7 +19,7 @@ enum editorKey {
   ARROW_DOWN,
   DEL_KEY,
   HOME_KEY,
-  END_KEY
+  END_KEY,
   PAGE_UP,
   PAGE_DOWN
 };
@@ -35,13 +35,12 @@ struct editorConfig E;
 
 /*** terminal ***/
 void disableRawMode() {
-    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &E.orig_termios) == -1)
+  if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &E.orig_termios) == -1)
     die("tcsetattr");
 }
 
 void enableRawMode() {
-  if (tcgetattr(STDIN_FILENO, &orig_termios) == -1) die("tcgetattr");
-  tcgetattr(STDIN_FILENO, &orig_termios);
+  if (tcgetattr(STDIN_FILENO, &E.orig_termios) == -1) die("tcgetattr");
   atexit(disableRawMode);
   struct termios raw = E.orig_termios;
   raw.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
@@ -93,7 +92,6 @@ int editorReadKey() {
         case 'F': return END_KEY;
       }
     }
-  }
     return '\x1b';
   } else {
     return c;
@@ -146,21 +144,7 @@ void abFree(struct abuf *ab) {
 }
 
 /*** output ***/
-void editorRefreshScreen() {
-  struct abuf ab = ABUF_INIT;
-  abAppend(&ab, "\x1b[?25l", 6);
-  abAppend(&ab, "\x1b[H", 3);
-  editorDrawRows(&ab);
-  char buf[32];
-  snprintf(buf, sizeof(buf), "\x1b[%d;%dH", E.cy + 1, E.cx + 1);
-  abAppend(&ab, buf, strlen(buf));
-  abAppend(&ab, "\x1b[H", 3);
-  abAppend(&ab, "\x1b[?25h", 6);
-  write(STDOUT_FILENO, ab.b, ab.len);
-  abFree(&ab);
-}
-
-  void editorDrawRows(struct abuf *ab) {
+void editorDrawRows(struct abuf *ab) {
   int y;
   for (y = 0; y < E.screenrows; y++) {
         if (y == E.screenrows / 3) {
@@ -185,6 +169,20 @@ void editorRefreshScreen() {
     }
   }
 }
+
+void editorRefreshScreen() {
+  struct abuf ab = ABUF_INIT;
+  abAppend(&ab, "\x1b[?25l", 6);
+  abAppend(&ab, "\x1b[H", 3);
+  editorDrawRows(&ab);
+  char buf[32];
+  snprintf(buf, sizeof(buf), "\x1b[%d;%dH", E.cy + 1, E.cx + 1);
+  abAppend(&ab, buf, strlen(buf));
+  abAppend(&ab, "\x1b[?25h", 6);
+  write(STDOUT_FILENO, ab.b, ab.len);
+  abFree(&ab);
+}
+
 
 /*** input ***/
 void editorMoveCursor(int key) {
