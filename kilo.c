@@ -156,6 +156,7 @@ void editorOpen(char *filename) {
   fclose(fp);
 }
 
+
 /*** append buffer ***/
 struct abuf {
   char *b;
