@@ -1,4 +1,8 @@
 /*** includes ***/
+#define _DEFAULT_SOURCE
+#define _BSD_SOURCE
+#define _GNU_SOURCE
+
 #include <stdlib.h>
 #include <termios.h>
 #include <errno.h>
@@ -12,6 +16,7 @@
 /*** defines ***/
 #define KILO_VERSION "0.0.1"
 #define CTRL_KEY(k) ((k) & 0x1f)
+#define _POSIX_C_SOURCE 200809L
 
 enum editorKey {
   ARROW_LEFT = 1000,
